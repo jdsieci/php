@@ -183,9 +183,6 @@ for version in "${versions[@]}"; do
 			if [ "$variant" = 'apache' ]; then
 				cp -a apache2-foreground "$version/$suite/$variant/"
 			fi
-			if [ "$alpineVer" = '3.4' ]; then
-				sed -ri 's!libressl!openssl!g' "$version/$suite/$variant/Dockerfile"
-			fi
 			if [ "$majorVersion" = '5' ] || [ "$majorVersion" = '7' -a "$minorVersion" -lt '2' ] || [ "$suite" = 'jessie' ]; then
 				# argon2 password hashing is only supported in 7.2+ and stretch+
 				sed -ri \
@@ -228,6 +225,10 @@ for version in "${versions[@]}"; do
 				# (matching whitespace to avoid "--with-openssl" being replaced with the non-existent "--with-libressl" flag)
 			fi
 		done
+                if [ -d "$version/$suite/fpm-full" ];then
+                  { generated_warning; cat "$baseDockerfile"; } > "$version/$suite/fpm-full/Dockerfile"
+                  dockerfiles+=( "$version/$suite/fpm-full/Dockerfile" )
+                fi
 	done
 
 	(
