@@ -19,6 +19,7 @@ env:
   - VERSION=7.2 VARIANT=alpine3.9/cli
   - VERSION=7.2 VARIANT=alpine3.9/fpm
   - VERSION=7.2 VARIANT=alpine3.9/zts
+  - VERSION=7.2 VARIANT=alpine3.9/fpm-full
   - VERSION=7.2 VARIANT=alpine3.8/cli
   - VERSION=7.2 VARIANT=alpine3.8/fpm
   - VERSION=7.2 VARIANT=alpine3.8/zts
@@ -33,6 +34,7 @@ env:
   - VERSION=7.1 VARIANT=alpine3.9/cli
   - VERSION=7.1 VARIANT=alpine3.9/fpm
   - VERSION=7.1 VARIANT=alpine3.9/zts
+  - VERSION=7.1 VARIANT=alpine3.9/fpm-full
   - VERSION=7.1 VARIANT=alpine3.8/cli
   - VERSION=7.1 VARIANT=alpine3.8/fpm
   - VERSION=7.1 VARIANT=alpine3.8/zts
