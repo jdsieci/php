@@ -1,8 +1,13 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -Eeuo pipefail
 
 # https://secure.php.net/gpg-keys.php
 declare -A gpgKeys=(
+	# https://wiki.php.net/todo/php73
+	# cmb & stas
+	# https://secure.php.net/gpg-keys.php#gpg-7.3
+	[7.3]='CBAF69F173A0FEA4B537F470D66C9593118BCCB6 F38252826ACD957EF380D39F2F7956BC5DA04B5D'
+
 	# https://wiki.php.net/todo/php72
 	# pollita & remi
 	# https://secure.php.net/downloads.php#gpg-7.2
@@ -72,6 +77,7 @@ verlte() {
 travisEnv=
 for version in "${versions[@]}"; do
 	rcVersion="${version%-rc}"
+
 	# "7", "5", etc
 	majorVersion="${rcVersion%%.*}"
 	# "2", "1", "6", etc
@@ -109,8 +115,7 @@ for version in "${versions[@]}"; do
 			]
 		'
 	fi
-
-        IFS=$'\n'
+	IFS=$'\n'
 	possibles=( $(
 		curl -fsSL "$apiUrl" \
 			| jq --raw-output "$apiJqExpr | @sh" \
@@ -128,9 +133,6 @@ for version in "${versions[@]}"; do
 	# format of "possibles" array entries is "VERSION URL.TAR.XZ URL.TAR.XZ.ASC SHA256 MD5" (each value shell quoted)
 	#   see the "apiJqExpr" values above for more details
 	eval "possi=( ${possibles[0]} )"
-
-        echo "${possi[@]}"
-
 	fullVersion="${possi[0]}"
 	url="${possi[1]}"
 	ascUrl="${possi[2]}"
@@ -151,7 +153,7 @@ for version in "${versions[@]}"; do
 
 	dockerfiles=()
 
-	for suite in stretch jessie alpine{3.7,3.6,3.4}; do
+	for suite in stretch jessie alpine{3.9,3.8,3.7,3.6,3.4}; do
 		[ -d "$version/$suite" ] || continue
 		alpineVer="${suite#alpine}"
 
@@ -178,27 +180,53 @@ for version in "${versions[@]}"; do
 				docker-php-ext-* \
 				docker-php-source \
 				"$version/$suite/$variant/"
-
+			if [ "$variant" = 'apache' ]; then
+				cp -a apache2-foreground "$version/$suite/$variant/"
+			fi
 			if [ "$alpineVer" = '3.4' ]; then
 				sed -ri 's!libressl!openssl!g' "$version/$suite/$variant/Dockerfile"
 			fi
 			if [ "$majorVersion" = '5' ] || [ "$majorVersion" = '7' -a "$minorVersion" -lt '2' ] || [ "$suite" = 'jessie' ]; then
 				# argon2 password hashing is only supported in 7.2+ and stretch+
-				sed -ri '/argon2/d' "$version/$suite/$variant/Dockerfile"
-				# Alpine 3.7+ _should_ include an "argon2-dev" package, but we should cross that bridge when we come to it
+				sed -ri \
+					-e '/##<argon2>##/,/##<\/argon2>##/d' \
+					-e '/argon2/d' \
+					"$version/$suite/$variant/Dockerfile"
 			fi
 			if [ "$majorVersion" = '5' ] || [ "$majorVersion" = '7' -a "$minorVersion" -lt '2' ]; then
 				# sodium is part of php core 7.2+ https://wiki.php.net/rfc/libsodium
 				sed -ri '/sodium/d' "$version/$suite/$variant/Dockerfile"
 			fi
+			if [ "$variant" = 'fpm' -a "$majorVersion" = '7' -a "$minorVersion" -lt '3' ]; then
+				# php-fpm "decorate_workers_output" is only available in 7.3+
+				sed -ri \
+					-e '/decorate_workers_output/d' \
+					-e '/log_limit/d' \
+					"$version/$suite/$variant/Dockerfile"
+			fi
+
+			# remove any _extra_ blank lines created by the deletions above
+			awk '
+				NF > 0 { blank = 0 }
+				NF == 0 { ++blank }
+				blank < 2 { print }
+			' "$version/$suite/$variant/Dockerfile" > "$version/$suite/$variant/Dockerfile.new"
+			mv "$version/$suite/$variant/Dockerfile.new" "$version/$suite/$variant/Dockerfile"
 
 			# automatic `-slim` for stretch
 			# TODO always add slim once jessie is removed
 			sed -ri \
-				-e 's!%%DEBIAN_SUITE%%!'"${suite/stretch/stretch-slim}"'!' \
+				-e 's!%%DEBIAN_TAG%%!'"${suite/stretch/stretch-slim}"'!' \
+				-e 's!%%DEBIAN_SUITE%%!'"$suite"'!' \
 				-e 's!%%ALPINE_VERSION%%!'"$alpineVer"'!' \
 				"$version/$suite/$variant/Dockerfile"
 			dockerfiles+=( "$version/$suite/$variant/Dockerfile" )
+
+			if [ "$suite" = 'alpine3.8' ]; then
+				# Alpine 3.9+ uses OpenSSL, but 3.8 still uses LibreSSL
+				sed -ri -e 's!(\s)openssl!\1libressl!g' "$version/$suite/$variant/Dockerfile"
+				# (matching whitespace to avoid "--with-openssl" being replaced with the non-existent "--with-libressl" flag)
+			fi
 		done
 	done
 
