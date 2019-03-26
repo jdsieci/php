@@ -27,6 +27,21 @@ declare -A gpgKeys=(
 	# https://secure.php.net/downloads.php#gpg-5.6
 	# https://secure.php.net/gpg-keys.php#gpg-5.6
 	[5.6]='0BD78B5F97500D450838F95DFE857D9A90D90EC1 6E4F6AB321FDC07F2C332E3AC2BF0BC433CFC8B3'
+
+        # https://wiki.php.net/todo/php55
+	# jpauli & tyrael
+	# https://secure.php.net/downloads.php#gpg-5.5
+	[5.5]='0B96609E270F565C13292B24C13C70B87267B52D 0BD78B5F97500D450838F95DFE857D9A90D90EC1'
+
+        # https://wiki.php.net/todo/php54
+	# jpauli & tyrael
+	# https://secure.php.net/downloads.php#gpg-5.4
+	[5.4]='F38252826ACD957EF380D39F2F7956BC5DA04B5D'
+
+        # https://wiki.php.net/todo/php53
+	# jpauli & tyrael
+	# https://secure.php.net/downloads.php#gpg-5.3
+	[5.3]='0A95E9A026542D53835E3F3A7DEC4E69FC9C83D7 0B96609E270F565C13292B24C13C70B87267B52D'
 )
 # see https://secure.php.net/downloads.php
 
@@ -49,10 +64,14 @@ generated_warning() {
 	EOH
 }
 
+
+verlte() {
+  [  "$1" = "$(echo -e "$1\n$2" | sort -V | head -n1)" ]
+}
+
 travisEnv=
 for version in "${versions[@]}"; do
 	rcVersion="${version%-rc}"
-
 	# "7", "5", etc
 	majorVersion="${rcVersion%%.*}"
 	# "2", "1", "6", etc
@@ -60,12 +79,15 @@ for version in "${versions[@]}"; do
 	minorVersion="${minorVersion%%.*}"
 
 	# scrape the relevant API based on whether we're looking for pre-releases
-	apiUrl="https://secure.php.net/releases/index.php?json&max=100&version=${rcVersion%%.*}"
+	apiUrl="https://secure.php.net/releases/index.php?json&max=500&version=${rcVersion}"
+        archive='.xz'
+        verlte $rcVersion '5.4' && archive='.bz2'
 	apiJqExpr='
 		(keys[] | select(startswith("'"$rcVersion"'."))) as $version
 		| [ $version, (
 			.[$version].source[]
-			| select(.filename | endswith(".xz"))
+                        | select ( .filename != null )
+		        | select(.filename | endswith("'"$archive"'"))
 			|
 				"https://secure.php.net/get/" + .filename + "/from/this/mirror",
 				"https://secure.php.net/get/" + .filename + ".asc/from/this/mirror",
@@ -87,7 +109,8 @@ for version in "${versions[@]}"; do
 			]
 		'
 	fi
-	IFS=$'\n'
+
+        IFS=$'\n'
 	possibles=( $(
 		curl -fsSL "$apiUrl" \
 			| jq --raw-output "$apiJqExpr | @sh" \
@@ -105,6 +128,9 @@ for version in "${versions[@]}"; do
 	# format of "possibles" array entries is "VERSION URL.TAR.XZ URL.TAR.XZ.ASC SHA256 MD5" (each value shell quoted)
 	#   see the "apiJqExpr" values above for more details
 	eval "possi=( ${possibles[0]} )"
+
+        echo "${possi[@]}"
+
 	fullVersion="${possi[0]}"
 	url="${possi[1]}"
 	ascUrl="${possi[2]}"
