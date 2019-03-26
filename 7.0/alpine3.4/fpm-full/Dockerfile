@@ -1,4 +1,4 @@
-FROM jdsieci/php-fpm:7.0.28-minimal
+FROM jdsieci/php-fpm:7.0.33-minimal
 
 RUN apk add --no-cache --virtual .persistent-deps \
 		bzip2
