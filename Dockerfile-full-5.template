@@ -31,6 +31,8 @@ RUN apk add --no-cache --virtual .build-deps \
 	&& docker-php-ext-install pdo_mysql \
 	&& docker-php-ext-configure mysqli --with-mysqli=shared,mysqlnd \
 	&& docker-php-ext-install mysqli \
+	&& docker-php-ext-configure mysql --with-mysql=shared,mysqlnd \
+	&& docker-php-ext-install mysql \
 	&& runDeps="$( \
 		scanelf --needed --nobanner --recursive /usr/local \
 			| awk '{ gsub(/,/, "\nso:", $2); print "so:" $2 }' \

@@ -74,6 +74,10 @@ verlte() {
   [  "$1" = "$(echo -e "$1\n$2" | sort -V | head -n1)" ]
 }
 
+verlt() {
+  [ "$1" = "$2" ] && return 1 || verlte $1 $2
+}
+
 travisEnv=
 for version in "${versions[@]}"; do
 	rcVersion="${version%-rc}"
@@ -156,10 +160,12 @@ for version in "${versions[@]}"; do
 	for suite in stretch jessie alpine{3.9,3.8,3.7,3.6,3.4}; do
 		[ -d "$version/$suite" ] || continue
 		alpineVer="${suite#alpine}"
+                alpine=false
 
 		baseDockerfile=Dockerfile-debian.template
 		if [ "${suite#alpine}" != "$suite" ]; then
 			baseDockerfile=Dockerfile-alpine.template
+                        alpine=true
 		fi
 
 		for variant in cli apache fpm zts; do
@@ -219,14 +225,18 @@ for version in "${versions[@]}"; do
 				"$version/$suite/$variant/Dockerfile"
 			dockerfiles+=( "$version/$suite/$variant/Dockerfile" )
 
-			if [ "$suite" = 'alpine3.8' ]; then
+			if $alpine && verlte $alpineVer '3.8' && [ "$alpineVer" != '3.4' ]; then
 				# Alpine 3.9+ uses OpenSSL, but 3.8 still uses LibreSSL
 				sed -ri -e 's!(\s)openssl!\1libressl!g' "$version/$suite/$variant/Dockerfile"
 				# (matching whitespace to avoid "--with-openssl" being replaced with the non-existent "--with-libressl" flag)
 			fi
 		done
                 if [ -d "$version/$suite/fpm-full" ];then
-                  { generated_warning; cat "$baseDockerfile"; } > "$version/$suite/fpm-full/Dockerfile"
+                  dockerfile="Dockerfile-full.template"
+                  if verlt $rcVersion '7.0';then
+                    dockerfile="Dockerfile-full-5.template"
+                  fi
+                  { generated_warning; cat "${dockerfile}"; } > "$version/$suite/fpm-full/Dockerfile"
                   dockerfiles+=( "$version/$suite/fpm-full/Dockerfile" )
                 fi
 	done
@@ -247,6 +257,7 @@ for version in "${versions[@]}"; do
 	for dockerfile in "${dockerfiles[@]}"; do
 		cmd="$(awk '$1 == "CMD" { $1 = ""; print }' "$dockerfile" | tail -1 | jq --raw-output '.[0]')"
 		entrypoint="$(dirname "$dockerfile")/docker-php-entrypoint"
+                [[ -f "$entrypoint" ]] || continue
 		sed -i 's! php ! '"$cmd"' !g' "$entrypoint"
 	done
 
