@@ -23,7 +23,9 @@ RUN apk add --no-cache --virtual .persistent-deps \
 		tar \
 		xz \
 # https://github.com/docker-library/php/issues/494
-		libressl
+		libressl \
+# For entry point
+                sudo
 
 # ensure www-data user exists
 RUN set -x \
