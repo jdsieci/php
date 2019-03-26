@@ -1,3 +1,9 @@
+#
+# NOTE: THIS DOCKERFILE IS GENERATED VIA "update.sh"
+#
+# PLEASE DO NOT EDIT IT DIRECTLY.
+#
+
 FROM jdsieci/php-fpm:5.3.29-minimal
 
 RUN apk add --no-cache --virtual .persistent-deps \

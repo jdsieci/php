@@ -43,6 +43,7 @@ env:
   - VERSION=7.0 VARIANT=alpine3.4/cli
   - VERSION=7.0 VARIANT=alpine3.4/fpm
   - VERSION=7.0 VARIANT=alpine3.4/zts
+  - VERSION=7.0 VARIANT=alpine3.4/fpm-full
   - VERSION=5.6 VARIANT=jessie/cli
   - VERSION=5.6 VARIANT=jessie/apache
   - VERSION=5.6 VARIANT=jessie/fpm
@@ -50,8 +51,11 @@ env:
   - VERSION=5.6 VARIANT=alpine3.4/cli
   - VERSION=5.6 VARIANT=alpine3.4/fpm
   - VERSION=5.6 VARIANT=alpine3.4/zts
+  - VERSION=5.6 VARIANT=alpine3.4/fpm-full
   - VERSION=5.4 VARIANT=alpine3.4/fpm
+  - VERSION=5.4 VARIANT=alpine3.4/fpm-full
   - VERSION=5.3 VARIANT=alpine3.4/fpm
+  - VERSION=5.3 VARIANT=alpine3.4/fpm-full
 
 install:
   - git clone https://github.com/docker-library/official-images.git ~/official-images
