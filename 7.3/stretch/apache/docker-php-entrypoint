@@ -9,9 +9,9 @@ fi
 [[ "z${USER_ID}" == "z" ]] && USER_ID=$(id -u)
 [[ "z${GROUP_ID}" == "z" ]] && GROUP_ID=$(id -g)
 
-if [[ ${USER_ID} -eq 0 ]];then
+if [[ ${USER_ID} -eq $(id -u) ]];then
     exec "$@"
-else
+elif [[ $(id -u) -eq 0 ]]; then
     RUN_USER=${USER_NAME:=runuser}
     RUN_GROUP=$(getent group|awk -F: '$3=='${GROUP_ID}'{print $1}')
 
@@ -26,4 +26,6 @@ else
     chown ${RUN_USER}:${RUN_GROUP} -R .
 
     exec sudo -E -u "${RUN_USER}" "$@"
+else
+  echo "Cannot run sudo as user" >&2
 fi
