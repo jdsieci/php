@@ -54,6 +54,8 @@ env:
   - VERSION=5.6 VARIANT=alpine3.4/fpm
   - VERSION=5.6 VARIANT=alpine3.4/zts
   - VERSION=5.6 VARIANT=alpine3.4/fpm-full
+  - VERSION=5.5 VARIANT=alpine3.9/fpm
+  - VERSION=5.5 VARIANT=alpine3.9/fpm-full
   - VERSION=5.4 VARIANT=alpine3.4/fpm
   - VERSION=5.4 VARIANT=alpine3.4/fpm-full
   - VERSION=5.3 VARIANT=alpine3.4/fpm
