@@ -24,8 +24,13 @@ elif [[ $(id -u) -eq 0 ]]; then
 
     # Give user write access to app files
     chown ${RUN_USER}:${RUN_GROUP} -R .
+    
+    #Add access to default file descriptors
+    chmod +w /dev/stderr /dev/stdout
+    chmod +r /dev/stdin
 
     exec sudo -E -u "${RUN_USER}" "$@"
 else
-  echo "Cannot run sudo as user" >&2
+  echo "Cannot run sudo as unprivileged user" >&2
 fi
+
