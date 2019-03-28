@@ -42,8 +42,6 @@ env:
   - VERSION=7.0 VARIANT=jessie/apache
   - VERSION=7.0 VARIANT=jessie/fpm
   - VERSION=7.0 VARIANT=jessie/zts
-  - VERSION=7.0 VARIANT=alpine3.8/fpm
-  - VERSION=7.0 VARIANT=alpine3.8/fpm-full
   - VERSION=7.0 VARIANT=alpine3.4/cli
   - VERSION=7.0 VARIANT=alpine3.4/fpm
   - VERSION=7.0 VARIANT=alpine3.4/zts
@@ -56,8 +54,6 @@ env:
   - VERSION=5.6 VARIANT=alpine3.4/fpm
   - VERSION=5.6 VARIANT=alpine3.4/zts
   - VERSION=5.6 VARIANT=alpine3.4/fpm-full
-  - VERSION=5.5 VARIANT=alpine3.9/fpm
-  - VERSION=5.5 VARIANT=alpine3.9/fpm-full
   - VERSION=5.5 VARIANT=alpine3.4/fpm
   - VERSION=5.4 VARIANT=alpine3.4/fpm
   - VERSION=5.4 VARIANT=alpine3.4/fpm-full
